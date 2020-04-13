@@ -105,7 +105,7 @@
 
 (rum/defc input < rum/reactive [r label minor]
   [:div
-   [:input {:value (rum/react (citrus/subscription r [:game :edit minor]))
+   [:input {;:value (rum/react (citrus/subscription r [:game :edit minor]))
            :placeholder label
            :on-change #(citrus/dispatch! r :game :associn [[:edit minor] (.. % -target -value)])}]
    [:br]
@@ -173,7 +173,8 @@
 
       ]
       [:h2 {:style {:width "100%" :text-align "center" :font-weight "600" :margin-top "30px"}} "Donate ONE or ETH to the ZGEN DAO to support our work: "[:a {:href "https://etherscan.io/address/0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b" :target "_blank"} "0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b"]]
-      [:h2 {:style {:font-weight "600" :margin-top "30px"}} "Send your feature requests to: crypto@zgen.hu"]
+      [:h2 {:style {:width "100%" :text-align "center" :font-weight "600" :margin-top "30px"}} "Send your feature requests to: crypto@zgen.hu"]
+      [:h2 {:style {:font-weight "600" :margin-top "30px"}} "Source: "[:a {:href "https://github.com/liszper/one-validator-dashboard" :target "_blank"}"liszper/one-validator-dashboard"]]
      ]]
 
 ))

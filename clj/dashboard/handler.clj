@@ -43,6 +43,13 @@
 
 (def wallet "one1pe9n09m47x82fv3s2ljulx2q5ulnlnvtc0ek49")
 
+(defn download-cli [] (clojure.java.shell/sh "curl" "-LO" "https://harmony.one/hmycli" "&&" "mv" "hmycli" "hmy" "&&" "chmod" "+x" "hmy"))
+
+(defn generate-bls [] (clojure.java.shell/sh "./hmy" "keys" "generate-bls-key"))
+
+(defn run-node [] (clojure.java.shell/sh "curl" "-LO" "https://raw.githubusercontent.com/harmony-one/harmony/master/scripts/node.sh" "&&" "chmod" "a+x" "node.sh"))
+
+
 (defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
   (let [
         {:keys [v-name
