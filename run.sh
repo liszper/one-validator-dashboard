@@ -51,5 +51,5 @@ _______________________________________________________________________
 " | lolcat
 tmux new-session -d -s "nodeSession" ./run-node.sh
 tmux new-session -d -s "dashboardSession" ./install.sh
-echo "Navigate to the your.ip:3000 address in your favorite browser!"
+echo "Wait 5 minutes and then navigate to the your.ip:3000 address in your favorite browser to initialize your validator!"
 echo "You done it!"
