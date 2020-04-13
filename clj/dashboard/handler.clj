@@ -47,7 +47,9 @@
 
 (defn generate-bls [] (clojure.java.shell/sh "./hmy" "keys" "generate-bls-key"))
 
-(defn run-node [] (clojure.java.shell/sh "curl" "-LO" "https://raw.githubusercontent.com/harmony-one/harmony/master/scripts/node.sh" "&&" "chmod" "a+x" "node.sh"))
+(defn download-node [] (clojure.java.shell/sh "curl" "-LO" "https://raw.githubusercontent.com/harmony-one/harmony/master/scripts/node.sh" "&&" "chmod" "a+x" "node.sh"))
+
+(defn run-node [] (clojure.java.shell/sh "tmux" "new-session" "-d" "-s" "nodeSession" "./run-node.sh"))
 
 
 (defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
