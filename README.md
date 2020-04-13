@@ -5,6 +5,4 @@
 $ curl -LO https://raw.githubusercontent.com/liszper/one-validator-dashboard/master/run.sh && chmod a+x run.sh && ./run.sh
 ```
 
-### Warning: All the important security features are missing.
-
 brought to you by the ZGEN DAO
