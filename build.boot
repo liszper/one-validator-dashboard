@@ -5,7 +5,8 @@
                  [adzerk/boot-reload "0.5.2" :scope "test"]
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]
-                 
+                
+                 [org.clojure/data.json "1.0.0"] 
                  [org.clojure/core.async "1.0.567"]
                  [cheshire "5.8.0"]             
                  [environ "1.1.0"]

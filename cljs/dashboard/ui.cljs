@@ -29,34 +29,12 @@
 (defmethod game :init-ready [_ [state]]
   (if-not (nil? state)
     (map-of state)
-    {:state (hash-map
-             :t 0
-             :u 0
-             :w 0
-             :x 0
-             :y 0
-             :z 0 
-             :nick nil
-             :uid nil
-             :description
-             {:skin (rand-nth [:black :white :asian])
-              :height (rand-nth [193 160 172 178 189 204])}
-             )}))
+    {}))
 
 (defmethod game :update [_ new-state state]
   (let [state (merge state (first new-state))
         local-storage {:method :set :data state :key :game}]
     (map-of state local-storage)))
-
-
-;(defmethod game :move-left [_ _ state]
-;  (let [state (if (= (:direction state) :left)
-;                (update state :x dec)
-;                (assoc (update state :x dec) :direction :left))
-;        local-storage {:method :set :data state :key :game}]
-;    (map-of state local-storage)))
-
-
 
 (defmulti party (fn [event] event))
 
@@ -111,15 +89,6 @@
 (defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
 
 
-(defn action [id opt]
-  (case id
-    :play (chsk-send! [:game/action {:id :play :opt {:index opt :card (get (vec @(citrus/subscription reconciler [:game :hand])) opt)}}])
-    :move (chsk-send! [:game/action {:id :move :opt opt}])
-    :chat (chsk-send! [:game/action {:id :chat :opt opt}])
-    :travel (chsk-send! [:game/action {:id :travel :opt opt}])
-    :timetravel (chsk-send! [:game/action {:id :timetravel :opt opt}])
-    nil))
-
 ;//////////\\\\\\\\\ UI
 
 
@@ -128,10 +97,33 @@
            :on-change #(citrus/dispatch! r major function {minor (.. % -target -value)})}])
 
 
-(rum/defc World < rum/static [r]
-  [:div.ui
-   [:h2 "Validator Dashboard"] 
-   ])
+(rum/defc World < rum/reactive [r]
+  (let [
+        {:keys [latest-headers addresses validator-info]} (rum/react (citrus/subscription r [:game]))
+        {:keys [beacon-chain-header shard-chain-header]} latest-headers
+        ]
+    [:div {:style {:margin "30px" :padding "30px" :border "3px solid"}}
+     [:h2 {:style {:text-align "center" :width "100%"}} "Validator Dashboard of "(:name (:validator validator-info))]
+     [:h3 {:style {:text-align "center" :width "100%"}} "Address: "(:address (:validator validator-info))]
+     [:h3 {:style {:text-align "center" :width "100%"}} "Status: "(:epos-status validator-info)]
+     [:h3 {:style {:text-align "center" :width "100%"}} "In committee? "(str (:currently-in-committee validator-info))]
+     [:div {:style {:display "flex" :justify-content "center" :align-items "center" :flex-wrap "wrap"}}
+      [:div {:style {:margin "30px" :padding "30px" :border "3px solid rgba(0,0,0,0.3)"}}
+      [:h4 "Beacon:"]
+      [:h5 "Block: "(:block-number beacon-chain-header)]
+      [:h5 "Epoch: "(:epoch beacon-chain-header)]
+      [:h5 "Shard ID: "(:shard-id beacon-chain-header)]]
+     [:div {:style {:margin "30px" :padding "30px" :border "3px solid rgba(0,0,0,0.3)"}}
+      [:h4 "Shard:"]
+      [:h5 "Block: "(:block-number shard-chain-header)]
+      [:h5 "Epoch: "(:epoch shard-chain-header)]
+      [:h5 "Shard ID: "(:shard-id shard-chain-header)]]
+     [:div {:style {:width "100%"}}
+      [:h3 "Changing validator information is coming soon!"]
+      [:h3 "Work in progress.."]
+      (str validator-info)
+      ]
+     ]]))
 
 (rum/mount (World reconciler)
            (. js/document (getElementById "ui")))
@@ -175,8 +167,8 @@
 (defmethod event-msg-handler :chsk/recv
   [{:as ev-msg :keys [?data]}] 
   (let [[event-key event-data] ?data]
-    (case event-key
-      nil)))
+    (citrus/dispatch! reconciler :game :update {(keyword (name event-key)) event-data})
+    ))
 
 
 

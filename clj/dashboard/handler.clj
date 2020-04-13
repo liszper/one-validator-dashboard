@@ -5,6 +5,7 @@
    [system.repl :refer [system]]
    [hara.io.scheduler :as hara]
    [hara.time :as t]
+   [clojure.data.json :as json]
 
    [compojure.core :refer [defroutes GET POST]]
    [compojure.route :as route :refer [resources]]
@@ -46,10 +47,41 @@
 
 (defmethod event-msg-handler :game/report [{:keys [uid ?data]}] nil)
 
+(def state (atom {}))
+
 (def scheduler 
   (hara/scheduler 
     {
-     :tick {:handler (fn [t] (println "Test" t)) :schedule "/1 * * * * * *"}
+     :tick {:handler (fn [t] 
+                       (let [latest-headers 
+                             (:result
+                               (json/read-str
+                               (:out (clojure.java.shell/sh "../hmy" "blockchain" "latest-headers"))
+                               :key-fn keyword
+                               ))
+                             validator-info
+                             (:result
+                               (json/read-str
+                               (:out (clojure.java.shell/sh "../hmy" "--node=https://api.s0.os.hmny.io" "blockchain" "validator" "information" "one1pe9n09m47x82fv3s2ljulx2q5ulnlnvtc0ek49"))
+                               :key-fn keyword
+                             ))]
+                         (send-all! :data/latest-headers latest-headers)
+                         (send-all! :data/validator-info validator-info)
+                         (swap! state assoc :latest-headers latest-headers)
+                         )) :schedule "/1 * * * * * *"}
+     :less {:handler
+            
+            (fn [t]
+         
+              (let [addresses
+                    (:out (clojure.java.shell/sh "../hmy" "keys" "list"))
+                    ]
+                (send-all! :data/addresses addresses)
+                (swap! state assoc :addresses addresses)
+                
+                )
+      
+              ) :schedule "/10 * * * * * *"}
      }
     {}
     {:clock {:type "clojure.lang.PersistentArrayMap"

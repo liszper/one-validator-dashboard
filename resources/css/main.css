@@ -14,30 +14,6 @@ font-family: 'Berkshire Swash', cursive;
 
 }
 
-* {
-  -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none;
-}
-
-* {
-  cursor: url("cursor3.png") 10 4, auto; }
-
-.graphics-engine-render-canvas.cursor-normal {
-  cursor: url("cursor2.png") 10 4, auto; }
-
-.graphics-engine-render-canvas.cursor-pointer {
-  cursor: url("cursor2.png") 5 4, pointer; }
-
-.graphics-engine-render-canvas.cursor-attack {
-  cursor: url("cursor2.png") 10 4, pointer; }
-
-.graphics-engine-render-canvas.cursor-move {
-  cursor: url("cursor2.png") 10 4, pointer; }
-
 .chatBox {
 position: fixed;
     left: 50%;
