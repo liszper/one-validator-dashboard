@@ -41,11 +41,37 @@
 
 (defmethod event-msg-handler :chsk/uidport-close [ev-msg] (let [uid (:uid ev-msg)] nil))
 
-(defmethod event-msg-handler :player/state [{:keys [uid ?data]}] nil)
+(def wallet "one1pe9n09m47x82fv3s2ljulx2q5ulnlnvtc0ek49")
 
-(defmethod event-msg-handler :game/action [{:keys [uid ?data]}] nil)
+(defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
+  (let [
+        {:keys [v-name
+                v-identity
+                v-website
+                v-details
+                v-contact
+                v-commission
+                v-total
+                ]} ?data
+        
+        response
 
-(defmethod event-msg-handler :game/report [{:keys [uid ?data]}] nil)
+    (:out
+      (apply clojure.java.shell/sh 
+           (concat
+             ["../hmy" "--node=https://api.s0.os.hmny.io" "staking" "edit-validator" "--validator-addr" wallet]
+             (when v-name ["--name" v-name]) 
+             (when v-identity ["--identity" v-identity]) 
+             (when v-website ["--website" v-website])
+             (when v-details ["--details" v-details]) 
+             (when v-contact ["--security-contact" v-contact]) 
+             (when v-commission ["--rate" v-commission]) 
+             (when v-total ["--max-total-delegation" v-total]) 
+             )))
+        ]
+    (send-all! :data/latest-response (str response))
+    (println (str ?data))
+  ))
 
 (def state (atom {}))
 
@@ -62,14 +88,14 @@
                              validator-info
                              (:result
                                (json/read-str
-                               (:out (clojure.java.shell/sh "../hmy" "--node=https://api.s0.os.hmny.io" "blockchain" "validator" "information" "one1pe9n09m47x82fv3s2ljulx2q5ulnlnvtc0ek49"))
+                               (:out (clojure.java.shell/sh "../hmy" "--node=https://api.s0.os.hmny.io" "blockchain" "validator" "information" wallet))
                                :key-fn keyword
                              ))]
                          (send-all! :data/latest-headers latest-headers)
                          (send-all! :data/validator-info validator-info)
                          (swap! state assoc :latest-headers latest-headers)
                          )) :schedule "/1 * * * * * *"}
-     :less {:handler
+     :tock {:handler
             
             (fn [t]
          

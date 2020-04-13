@@ -35,7 +35,6 @@
                  [metosin/potpuri "0.5.1"]
                  [ubergraph "0.5.0"]
 
-;                 [cljsjs/three "0.1.01-1"]
                  [cljsjs/howler "2.0.5-0"]
 
                  ])
