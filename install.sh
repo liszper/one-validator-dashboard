@@ -1,6 +1,4 @@
 #!/bin/bash
-apt-get update
-apt-get install lolcat -y
 echo "                     ,
                     /|
                    /*|
@@ -22,5 +20,16 @@ echo "                     ,
          |*::V '-'   //,):/Ä
          |:::+| ||
 		   " | lolcat
-apt-get install tmux leiningen -y
+echo "
+
+_______________________________________________________________________
+|[] AmigaShell                                                    |F]|!\"|
+|\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"|\"|
+|12.Workbench:> cd harmony:one                                        | |
+|12.Work:Harmony/ONE> ed run-node.asc                                 | |
+|                                                                     | |
+|                                                                     |_|
+|_____________________________________________________________________|/|
+" | lolcat
+tmux new-session -d -s "nodeSession" ./run-node.sh
 ./boot dev
