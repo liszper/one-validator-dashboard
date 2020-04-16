@@ -91,21 +91,23 @@
                                 v-contact
                                 v-commission
                                 v-total]}]
-      (apply clojure.java.shell/sh 
-             ["../hmy"
+      (clojure.java.shell/sh 
+             "../hmy"
               "--node=https://api.s0.os.hmny.io"
-              "staking" "create-validator" "--validator-addr" wallet
+              "staking"
+              "create-validator"
+              "--validator-addr" wallet
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
              "--website" (if v-website v-website "Website")
              "--details" (if v-details v-details "Details")
              "--security-contact" (if v-contact v-contact "Contact")
-             "--rate" (if v-commission v-commission 0.1)
-             "--max-rate" 1 
-             "--max-change-rate" 1 
-             "--max-total-delegation" (if v-total v-total 100000000)
-             "--min-self-delegation" 10000 
-             ]) 
+             "--rate" (str (if v-commission v-commission 0.1))
+             "--max-rate" "1"
+             "--max-change-rate" "1"
+             "--max-total-delegation" (str (if v-total v-total 100000000))
+             "--min-self-delegation" "10000"
+             ) 
              )
 
 (defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
@@ -177,7 +179,7 @@
                              ))
                              ]
                          (send-all! :data/validator-info validator-info)
-                         )) :schedule "/3 * * * * * *"}
+                         )) :schedule "/2 * * * * * *"}
 
      :tock {:handler
             
@@ -191,7 +193,7 @@
                 (send-all! :data/wallet-backup @backup-atom)
                 )
       
-              ) :schedule "/10 * * * * * *"}
+              ) :schedule "/3 * * * * * *"}
      }
     {}
     {:clock {:type "clojure.lang.PersistentArrayMap"
