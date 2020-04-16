@@ -39,13 +39,19 @@
 
 (defmethod game :update [_ new-state state]
   (let [state (merge state (first new-state))
-        local-storage {:method :set :data state :key :game}]
-    (map-of state local-storage)))
+        ;local-storage {:method :set :data state :key :game}
+        ]
+    (map-of state 
+            ;local-storage
+            )))
 
 (defmethod game :associn [_ new-state state]
   (let [state (assoc-in state (first (first new-state)) (second (first new-state)))
-        local-storage {:method :set :data state :key :game}]
-    (map-of state local-storage)))
+        ;local-storage {:method :set :data state :key :game}
+        ]
+    (map-of state 
+            ;local-storage
+            )))
 
 (defmulti party (fn [event] event))
 
