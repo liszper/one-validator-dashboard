@@ -116,11 +116,16 @@
   (let [
         {:keys [latest-headers latest-response addresses validator-info edit wallet-backup wallet-balances]} (rum/react (citrus/subscription r [:game]))
         {:keys [beacon-chain-header shard-chain-header]} latest-headers
+        fund (reduce (fn [x y] (+ x (get y "amount"))) 0 (-> wallet-balances first second))
+        ready? (< 0 fund)
         ]
  
     [:div {:style {:margin "30px" :padding "30px" :max-width "100%" :overflow "hidden" :width "100%" :border "3px solid"}}
      (when wallet-backup [:h3 {:style {:text-align "center" :width "100%"}} wallet-backup])
      (when wallet-balances [:h3 {:style {:text-align "center" :width "100%"}} "Balances: " [:br](str wallet-balances)])
+     (if ready?
+       [:h4 "Total balance: "fund]
+       [:h4 "You don't have any ONE yet, "[:a {:href "https://faucet.os.hmny.io/" :target "_blank"} "the faucet first."]])
      (when validator-info
        [:div {:style {:margin "30px" :padding "30px" :max-width "100%" :overflow "hidden" :width "100%" :border "3px solid"}}
      [:h2 {:style {:text-align "center" :width "100%"}} "Validator Dashboard of "(:name (:validator validator-info))]
@@ -155,8 +160,11 @@
       [:h5 "Block: "(:block-number shard-chain-header)]
       [:h5 "Epoch: "(:epoch shard-chain-header)]
       [:h5 "Shard ID: "(:shard-id shard-chain-header)]]
-     [:div {:style {:width "100%"}}
-      [:h4 "Edit validator info:"]
+     (when-not validator-info
+       [:h1 {:style {:width "100%"}} "This node it is not a validator yet."])
+     (when ready?
+       [:div {:style {:width "100%"}}
+      [:h4 (if validator-info "Edit validator info:" "Let's create it:")]
       (str edit)
       [:br]
       (input r "Validator name" :v-name)
@@ -166,21 +174,31 @@
       (input r "Security contact" :v-contact)
       (input r "Commission rate" :v-commission)
       (input r "Max total delegation" :v-total)
-      [:button.btn
+      (if validator-info
+        [:button.btn
        {:on-click
         #(do
           (chsk-send! [:validator/update edit])
           (citrus/dispatch! reconciler :game :update {:edit {}})
           )}
        "Update"]
-      [:p "Latest response:"]
+      [:button.btn
+       {:on-click
+        #(do
+          (chsk-send! [:validator/create edit])
+          (citrus/dispatch! reconciler :game :update {:edit {}})
+          )}
+       "Create"])
+      (when latest-response [:p "Latest response:"])
       [:p (str latest-response)]
 
-      ]
-      [:h2 {:style {:width "100%" :text-align "center" :font-weight "600" :margin-top "30px"}} "Donate ONE or ETH to the ZGEN DAO to support our work: "[:a {:href "https://etherscan.io/address/0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b" :target "_blank"} "0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b"]]
+      ])
+     (when validator-info
+     [:div
+      [:h2 {:style {:width "100%" :text-align "center" :font-weight "600" :margin-top "30px"}} "Don't forget to donate some ONE or ETH to the ZGEN DAO to support our further work: "[:a {:href "https://etherscan.io/address/0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b" :target "_blank"} "0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b"]]
       [:h2 {:style {:width "100%" :text-align "center" :font-weight "600" :margin-top "30px"}} "Send your feature requests to: crypto@zgen.hu"]
       [:h2 {:style {:font-weight "600" :margin-top "30px"}} "Source: "[:a {:href "https://github.com/liszper/one-validator-dashboard" :target "_blank"}"liszper/one-validator-dashboard"]]
-     ]]
+     ])]]
 
 ))
 

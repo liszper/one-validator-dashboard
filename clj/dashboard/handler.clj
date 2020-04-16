@@ -60,7 +60,8 @@
       result))))
 
 (defn list-wallets []
-  (into 
+  (dissoc
+    (into 
     (hash-map)
     (map
     (fn [x]
@@ -72,12 +73,14 @@
       (subs 
         (:out (clojure.java.shell/sh "../hmy" "keys" "list"))
         51)
-      #"\n"))))
+      #"\n")))
+    ""))
+
+(def backup-atom (atom nil))
 
 (when (empty? (list-wallets))
   (let [backup (create-wallet "autowallet")]
-    (send-all! :data/wallet-backup backup)
-    ))
+    (reset! backup-atom backup)))
 
 (def wallet (-> (list-wallets) first second))
 
@@ -90,7 +93,7 @@
                                 v-total]}]
       (apply clojure.java.shell/sh 
              ["../hmy"
-              ;"--node=https://api.s0.os.hmny.io"
+              "--node=https://api.s0.os.hmny.io"
               "staking" "create-validator" "--validator-addr" wallet
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
@@ -104,6 +107,13 @@
              "--min-self-delegation" 10000 
              ]) 
              )
+
+(defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
+  (let [
+        response (:out (create-validator ?data))
+        ]
+    (send-all! :data/latest-response (str response))
+  ))
 
 (defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
   (let [
@@ -122,7 +132,7 @@
       (apply clojure.java.shell/sh 
            (concat
              ["../hmy"
-              ;"--node=https://api.s0.os.hmny.io"
+              "--node=https://api.s0.os.hmny.io"
               "staking" "edit-validator" "--validator-addr" wallet]
              (when v-name ["--name" v-name]) 
              (when v-identity ["--identity" v-identity]) 
@@ -149,33 +159,36 @@
                                (:out (clojure.java.shell/sh "../hmy" "blockchain" "latest-headers"))
                                :key-fn keyword
                                ))
+                             ]
+                         (send-all! :data/latest-headers latest-headers)
+                         )) :schedule "/1 * * * * * *"}
+
+     :tack {:handler (fn [t] 
+                       (let [
                              validator-info
                              (:result
                                (json/read-str
                                (:out (clojure.java.shell/sh
                                        "../hmy"
-                                       ;"--node=https://api.s0.os.hmny.io"
+                                       "--node=https://api.s0.os.hmny.io"
                                        "blockchain" "validator"
                                        "information" wallet))
                                :key-fn keyword
                              ))
-                            balances (wallet-balance wallet) 
                              ]
-                         (send-all! :data/latest-headers latest-headers)
                          (send-all! :data/validator-info validator-info)
-                         (send-all! :data/wallet-balances balances)
-                         (swap! state assoc :latest-headers latest-headers)
-                         )) :schedule "/1 * * * * * *"}
+                         )) :schedule "/3 * * * * * *"}
+
      :tock {:handler
             
             (fn [t]
          
-              (let [addresses
-                    (:out (clojure.java.shell/sh "../hmy" "keys" "list"))
+              (let [
+                    wallets (list-wallets)
+                    balances (into (hash-map) (map (fn [[_ wallet]] (wallet-balance wallet)) wallets))
                     ]
-                (send-all! :data/addresses addresses)
-                (swap! state assoc :addresses addresses)
-                
+                (send-all! :data/wallet-balances balances)
+                (send-all! :data/wallet-backup @wallet-backup)
                 )
       
               ) :schedule "/10 * * * * * *"}
