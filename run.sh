@@ -35,8 +35,10 @@ curl -LO https://harmony.one/hmycli && mv hmycli hmy && chmod +x hmy
 echo "I don't see the point" > key.pass
 ./hmy keys generate-bls-key --passphrase-file key.pass
 KEY=$(find . -maxdepth 1 -type f -iname "*.key" | head -1)
-NAME="$(basename -- $KEY)"
-mv key.pass "$NAME.pass"
+NAME="$(basename -- "$KEY")"
+extension="${NAME##*.}"
+filename="${NAME%.*}"
+mv key.pass "$filename.pass"
 curl -LO https://raw.githubusercontent.com/harmony-one/harmony/master/scripts/node.sh && chmod a+x node.sh
 cd one-validator-dashboard
 echo "
