@@ -116,27 +116,16 @@
              ) 
              ))
 
-(defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
-  (let [
-        response (create-validator ?data)
-        response (or (when (not= (:err response) "") (:err response)) (:out response))
-        ]
-    (send-all! :data/latest-response (str response))
-  ))
-
-(defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
-  (let [
-        {:keys [v-name
+(defn get-validator-info [
+                          {:keys [v-name
                 v-identity
                 v-website
                 v-details
                 v-contact
                 v-commission
                 v-total
-                ]} ?data
-        
-        response
-
+                ]}
+                          ]
       (apply clojure.java.shell/sh 
            (concat
              ["../hmy"
@@ -150,8 +139,20 @@
              (when v-commission ["--rate" v-commission]) 
              (when v-total ["--max-total-delegation" v-total]) 
              ))
-        
-    response (or (when (not= (:err response) "") (:err response)) (:out response))
+  )
+
+(defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
+  (let [
+        response (create-validator ?data)
+        response (or (when (not= (:err response) "") (:err response)) (:out response))
+        ]
+    (send-all! :data/latest-response (str response))
+  ))
+
+(defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
+  (let [
+        response (get-validator-info ?data)
+        response (or (when (not= (:err response) "") (:err response)) (:out response))
         ]
     (send-all! :data/latest-response (str response))
     (println (str ?data))
