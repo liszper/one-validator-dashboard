@@ -101,6 +101,7 @@
               "--validator-addr" wallet
               "--bls-pubkeys" bls
               "--bls-pubkeys-dir" "/root"
+              "--passphrase-file" (str "../"bls".pass")
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
              "--website" (if v-website v-website "Website")
