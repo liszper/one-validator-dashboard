@@ -1,3 +1,5 @@
 #!/bin/bash
 cd ~
-find . -maxdepth 1 -type f -iname "*.key" | head -1
+FULL=$(find . -maxdepth 1 -type f -iname "*.key" | head -1)
+BLS="$(basename -- $FULL)"
+$BLS
