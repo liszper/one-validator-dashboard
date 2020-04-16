@@ -94,14 +94,15 @@
   (let [bls (subs (:out (clojure.java.shell/sh "./get-bls.sh")) 0 96)]
     (println "BLS:" bls)
       (clojure.java.shell/sh 
-             "../hmy"
+        "cd" ".." "&&"     
+        "./hmy"
               "--node=https://api.s0.os.hmny.io"
               "staking"
               "create-validator"
               "--validator-addr" wallet
               "--bls-pubkeys" bls
-              "--bls-pubkeys-dir" "/root"
-              "--passphrase-file" (str "../"bls".pass")
+              ;"--bls-pubkeys-dir" "/root"
+              ;"--passphrase-file" (str "../"bls".pass")
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
              "--website" (if v-website v-website "Website")
