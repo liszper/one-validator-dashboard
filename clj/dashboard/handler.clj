@@ -116,7 +116,7 @@
              ) 
              ))
 
-(defn get-validator-info [
+(defn update-validator [
                           {:keys [v-name
                 v-identity
                 v-website
@@ -141,6 +141,18 @@
              ))
   )
 
+(defn get-validator-info []
+                             (:result
+                               (json/read-str
+                               (:out (clojure.java.shell/sh
+                                       "../hmy"
+                                       "--node=https://api.s0.os.hmny.io"
+                                       "blockchain" "validator"
+                                       "information" wallet))
+                               :key-fn keyword
+                             ))
+  )
+
 (defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
   (let [
         response (create-validator ?data)
@@ -151,7 +163,7 @@
 
 (defmethod event-msg-handler :validator/update [{:keys [uid ?data]}]
   (let [
-        response (get-validator-info ?data)
+        response (update-validator ?data)
         response (or (when (not= (:err response) "") (:err response)) (:out response))
         ]
     (send-all! :data/latest-response (str response))
@@ -176,16 +188,7 @@
 
      :tack {:handler (fn [t] 
                        (let [
-                             validator-info
-                             (:result
-                               (json/read-str
-                               (:out (clojure.java.shell/sh
-                                       "../hmy"
-                                       "--node=https://api.s0.os.hmny.io"
-                                       "blockchain" "validator"
-                                       "information" wallet))
-                               :key-fn keyword
-                             ))
+                             validator-info (get-validator-info)
                              ]
                          (send-all! :data/validator-info validator-info)
                          )) :schedule "/2 * * * * * *"}
