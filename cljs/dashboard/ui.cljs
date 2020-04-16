@@ -114,11 +114,15 @@
 
 (rum/defc World < rum/reactive [r]
   (let [
-        {:keys [latest-headers latest-response addresses validator-info edit]} (rum/react (citrus/subscription r [:game]))
+        {:keys [latest-headers latest-response addresses validator-info edit wallet-backup wallet-balances]} (rum/react (citrus/subscription r [:game]))
         {:keys [beacon-chain-header shard-chain-header]} latest-headers
         ]
  
     [:div {:style {:margin "30px" :padding "30px" :max-width "100%" :overflow "hidden" :width "100%" :border "3px solid"}}
+     (when wallet-backup [:h3 {:style {:text-align "center" :width "100%"}} wallet-backup])
+     (when wallet-balances [:h3 {:style {:text-align "center" :width "100%"}} "Balances: " [:br](str wallet-balances)])
+     (when validator-info
+       [:div {:style {:margin "30px" :padding "30px" :max-width "100%" :overflow "hidden" :width "100%" :border "3px solid"}}
      [:h2 {:style {:text-align "center" :width "100%"}} "Validator Dashboard of "(:name (:validator validator-info))]
      [:h3 {:style {:text-align "center" :width "100%"}} "Validator Address: "(:address (:validator validator-info))]
      [:h3 {:style {:text-align "center" :width "100%"}} "Status: "(:epos-status validator-info)]
@@ -139,6 +143,7 @@
      [:h3 {:style {:text-align "center" :width "100%"}} "Creation: "(:creation-height (:validator validator-info))]
      [:h3 {:style {:text-align "center" :width "100%"}} "Commission rate: "(:rate (:validator validator-info))]
      [:h3 {:style {:text-align "center" :width "100%"}} "Max delegation: "(:max-total-delegation (:validator validator-info))]
+     ])
      [:div {:style {:display "flex" :justify-content "center" :align-items "center" :flex-wrap "wrap"}}
       [:div {:style {:margin "30px" :padding "30px" :border "3px solid rgba(0,0,0,0.3)"}}
       [:h4 "Beacon:"]
