@@ -99,8 +99,8 @@
               "staking"
               "create-validator"
               "--validator-addr" wallet
-              "--bls-pubkeys" (str "../"bls".key")
-              "--passphrase-file" (str "../"bls".pass")
+              "--bls-pubkeys" bls
+              "--bls-pubkeys-dir" "/root"
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
              "--website" (if v-website v-website "Website")
