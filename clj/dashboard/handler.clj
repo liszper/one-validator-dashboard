@@ -118,7 +118,8 @@
 
 (defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
   (let [
-        response (:out (create-validator ?data))
+        response (create-validator ?data)
+        response (or (when (not= (:err response) "") (:err response)) (:out response))
         ]
     (send-all! :data/latest-response (str response))
   ))
@@ -136,7 +137,6 @@
         
         response
 
-    (:out
       (apply clojure.java.shell/sh 
            (concat
              ["../hmy"
@@ -149,7 +149,9 @@
              (when v-contact ["--security-contact" v-contact]) 
              (when v-commission ["--rate" v-commission]) 
              (when v-total ["--max-total-delegation" v-total]) 
-             )))
+             ))
+        
+    response (or (when (not= (:err response) "") (:err response)) (:out response))
         ]
     (send-all! :data/latest-response (str response))
     (println (str ?data))
