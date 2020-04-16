@@ -185,7 +185,7 @@
          
               (let [
                     wallets (list-wallets)
-                    balances (into (hash-map) (map (fn [[_ wallet]] (wallet-balance wallet)) wallets))
+                    balances (into (hash-map) (map (fn [[_ wallet]] [wallet (wallet-balance wallet)]) wallets))
                     ]
                 (send-all! :data/wallet-balances balances)
                 (send-all! :data/wallet-backup @backup-atom)
