@@ -91,8 +91,7 @@
                                 v-contact
                                 v-commission
                                 v-total]}]
-  (let [bls (:out (clojure.java.shell/sh
-                    "find" ".." "-maxdepth" "1" "-type" "f" "-iname" "\"*.key\"" "|" "head -1"))]
+  (let [bls (:out (clojure.java.shell/sh "./get-bls.sh"))]
     (println "BLS:" bls)
       (clojure.java.shell/sh 
              "../hmy"
