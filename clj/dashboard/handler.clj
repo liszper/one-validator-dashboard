@@ -142,16 +142,19 @@
   )
 
 (defn get-validator-info []
-                             (:result
-                               (json/read-str
-                               (:out (clojure.java.shell/sh
+  (let [
+        response (clojure.java.shell/sh
                                        "../hmy"
                                        "--node=https://api.s0.os.hmny.io"
                                        "blockchain" "validator"
-                                       "information" wallet))
-                               :key-fn keyword
-                             ))
-  )
+                                       "information" wallet)
+        ]
+    (when (or (= (:err response) "") (nil? (:err response)))
+    (:result
+      (json/read-str
+        (:out response)
+        :key-fn keyword
+        )))))
 
 (defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
   (let [
