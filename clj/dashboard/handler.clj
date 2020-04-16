@@ -91,12 +91,16 @@
                                 v-contact
                                 v-commission
                                 v-total]}]
+  (let [bls (:out (clojure.java.shell/sh
+                    "find" ".." "-maxdepth" "1" "-type" "f" "-iname" "\"*.key\"" "|" "head -1"))]
+    (println "BLS:" bls)
       (clojure.java.shell/sh 
              "../hmy"
               "--node=https://api.s0.os.hmny.io"
               "staking"
               "create-validator"
               "--validator-addr" wallet
+              "--bls-pubkeys" bls
              "--name" (if v-name v-name (str "Autogenerate validator" (rand-int 40000)))
              "--identity" (if v-identity v-identity "Identity")
              "--website" (if v-website v-website "Website")
@@ -107,8 +111,9 @@
              "--max-change-rate" "1"
              "--max-total-delegation" (str (if v-total v-total 100000000))
              "--min-self-delegation" "10000"
+             "--amount" "10000"
              ) 
-             )
+             ))
 
 (defmethod event-msg-handler :validator/create [{:keys [uid ?data]}]
   (let [
