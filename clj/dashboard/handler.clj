@@ -91,7 +91,7 @@
                                 v-contact
                                 v-commission
                                 v-total]}]
-  (let [bls (subs (:out (clojure.java.shell/sh "./get-bls.sh")) 0 4)]
+  (let [bls (subs (:out (clojure.java.shell/sh "./get-bls.sh")) 0 96)]
     (println "BLS:" bls)
       (clojure.java.shell/sh 
              "../hmy"
