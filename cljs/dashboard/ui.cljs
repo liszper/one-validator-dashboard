@@ -155,10 +155,14 @@
      [:h3 {:style {:text-align "center" :width "100%"}} "Commission rate: "(:rate (:validator validator-info))]
      [:h3 {:style {:text-align "center" :width "100%"}} "Max delegation: "(:max-total-delegation (:validator validator-info))]
      ])
-     (when (< (:block-number shard-chain-header)
-              (:block-number beacon-chain-header))
-       [:h4 {:style {:width "100%"}} "Node is syncing.."])
      [:div {:style {:display "flex" :justify-content "center" :align-items "center" :flex-wrap "wrap"}}
+      
+     (if (< (:block-number shard-chain-header)
+              (:block-number beacon-chain-header))
+       [:h4 {:style {:width "100%"}} "Node is syncing.."]
+       [:h4 {:style {:width "100%"}} "Node synced."]
+       )
+      
       [:div {:style {:margin "30px" :padding "30px" :border "3px solid rgba(0,0,0,0.3)"}}
       [:h4 "Beacon:"]
       [:h5 "Block: "(:block-number beacon-chain-header)]
