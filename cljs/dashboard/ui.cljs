@@ -12,103 +12,6 @@
     [mantra.core :as m]))
 
 
-(defn deep-merge [v & vs]
-  (letfn [(rec-merge [v1 v2]
-            (if (and (map? v1) (map? v2))
-              (merge-with deep-merge v1 v2)
-              v2))]
-    (when (some identity vs)
-      (reduce #(rec-merge %1 %2) v vs))))
-
-(defn console! [& s] (js/console.log (apply str s)))
-
-;//////\\\\\\\\ CONTROLLERS
-
-(defmulti game (fn [event] event))
-
-(defmethod game :init []
-  {:local-storage
-   {:method :get
-    :key :game
-    :on-read :init-ready}})
-
-(defmethod game :init-ready [_ [state]]
-  (if-not (nil? state)
-    (map-of state)
-    {}))
-
-(defmethod game :update [_ new-state state]
-  (let [state (merge state (first new-state))
-        ;local-storage {:method :set :data state :key :game}
-        ]
-    (map-of state 
-            ;local-storage
-            )))
-
-(defmethod game :associn [_ new-state state]
-  (let [state (assoc-in state (first (first new-state)) (second (first new-state)))
-        ;local-storage {:method :set :data state :key :game}
-        ]
-    (map-of state 
-            ;local-storage
-            )))
-
-(defmulti party (fn [event] event))
-
-(defmethod party :init []
-  {:local-storage
-   {:method :get
-    :key :party
-    :on-read :init-ready}})
-
-(defmethod party :init-ready [_ [state]]
-  (if-not (nil? state)
-    (map-of state)
-    {:state {}}))
-
-(defmethod party :update [_ new-state state]
-  (let [state (first new-state)
-        local-storage {:method :set :data state :key :party}]
-    (map-of state local-storage)))
-
-
-;//////\\\\\\\\ SYSTEM
-
-  (let [{:keys [chsk ch-recv send-fn state]}
-      (sente/make-channel-socket! "/ws/network" {:type :auto})]
-    (def chsk       chsk)
-    (def ch-chsk    ch-recv)
-    (def chsk-send! send-fn)
-    (def chsk-state state))
-
-(defn cloud-storage [reconciler controller-name effect]
-  (let [{:keys [method data key on-read]} effect]
-    (case method
-      :set (chsk-send! [:data/save (map-of key data)])
-      :get (chsk-send! [:data/load key] 1000 (fn [data] (citrus/dispatch! reconciler controller-name on-read data)))
-      nil)))
-
-(defn local-storage [reconciler controller-name effect]
-  (let [{:keys [method data key on-read]} effect]
-    (case method
-      :set (js/localStorage.setItem (name key) data)
-      :get (->> (js/localStorage.getItem (name key))
-                (cljs.reader/read-string)
-                (citrus/dispatch! reconciler controller-name on-read))
-      nil)))
-
-(defonce reconciler
-  (citrus/reconciler
-    {:state (atom {})
-     :controllers (map-of game party)
-     :effect-handlers (map-of cloud-storage local-storage)}))
-
-(defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
-
-
-;//////////\\\\\\\\\ UI
-
-
 (rum/defc input < rum/reactive [r label minor]
   [:div
    [:input {;:value (rum/react (citrus/subscription r [:game :edit minor]))
@@ -117,8 +20,7 @@
    [:br]
    ])
 
-
-(rum/defc World < rum/reactive [r]
+(rum/defc Dashboard < rum/reactive [r]
   (let [
         {:keys [latest-headers latest-response addresses validator-info edit wallet-backup wallet-balances]} (rum/react (citrus/subscription r [:game]))
         {:keys [beacon-chain-header shard-chain-header]} latest-headers
@@ -215,50 +117,113 @@
 
 ))
 
-(rum/mount (World reconciler)
-           (. js/document (getElementById "app")))
 
+(defn login-view []
+  [:login-screen
+   [:div
+    [:img {:src "/images/logo.png"}]
+    [:password
+     [:input {:placeholder "Password"}]
+     [:login-btn [:img {:src "/images/arrow.svg"}]]]]])
 
+(defn app []
+  [:div
+   [:header
+    [:img {:src "/images/header-logo.png"}]
+    [:div
+     [:div
+      [:p "Address:"]
+      [:a (@state :address)]]
+     (if (:comitee @state)
+    [:div
+     [:dot]
+     [:p "Currently elected"]]
+    [:div
+     [:dot.orange]
+     [:p "Waiting to be selected"]])
+     ]]
 
-(defmulti event-msg-handler :id)
-(defmethod event-msg-handler :default ; Fallback
-  [{:as ev-msg :keys [event]}] (console! "Unhandled event: " event))
-(defmethod event-msg-handler :chsk/state
-  [{:as ev-msg :keys [?data]}]
-  (if (= ?data {:first-open? true})
-    (console! "First opened connection.")))
-(defmethod event-msg-handler :chsk/ping
-  [{:as ev-msg :keys [?data]}]
-  (console! "Server ping."))
-(defmethod event-msg-handler :chsk/ws-ping
-  [{:as ev-msg :keys [?data uid]}] 
-  (let [[?uid ?csrf-token ?handshake-data] ?data] 
-    (console! "Websocket ping: " ?uid)))
+   [:top-data
+    [:div.first
+     [:p "Balance"]
+     [:value (get-in @state [:top-data :balance]) [:span "ONE"]]]
+    [:div
+     [:p "Expected Return"]
+     [:value (get-in @state [:top-data :return]) [:span "%"]]]
+    [:div
+     [:p "Uptime (AVG)"]
+     [:value (get-in @state [:top-data :uptime]) [:span "%"]]]
+    [:div
+     [:p "Lifetime Rewards"]
+     [:value (get-in @state [:top-data :rewards]) [:span "ONE"]]]
+    [:div.last
+     [:p "Delegators"]
+     [:value (get-in @state [:top-data :delegators-head]) [:span "HEAD"]]]]
 
-(def router_ (atom nil))
-(defn stop-router! [] (when-let [stop-f @router_] (do (stop-f) (console! "Router stopped."))))
-(defn start-router! []
-  (do
-    (when @router_ (stop-router!)) 
-    (reset! router_ (sente/start-chsk-router! ch-chsk event-msg-handler))
-    (console! "Router started.")))
+   [:info-titles
+    [:p "General info"]
+    [:p "Delegators"]]
+   [:info
+    [:general
+     [:card
+      [:div
+       [:input {:value (get-in @state [:general :name])}]
+       [:label "Validator Name"]]
+      [:columns
+       [:column
+        [:div
+         [:input {:value (get-in @state [:general :desc])}]
+         [:label "Description"]]
+        [:div
+         [:input {:value (get-in @state [:general :details])}]
+         [:label "Details"]]
+        [:div
+         [:input {:value (get-in @state [:general :comission])}]
+         [:label "Comission Rate"]]]
+       [:column
+        [:div
+         [:input {:value (get-in @state [:general :site])}]
+         [:label "Website"]]
+        [:div
+         [:input {:value (get-in @state [:general :contact])}]
+         [:label "Security Contact"]]
+        [:div
+         [:input {:value (get-in @state [:general :max-del])}]
+         [:label "Max Total Delegation"]]]]
+      [:btn-wrapper
+       [:save-btn "Save Changes"]]]]
 
-(start-router!)
+    [:delegators
+     [:card
+      [:head-row
+       [:number [:p "No."]]
+       [:addres [:p "Address"]]
+       [:amount [:p "Amount"]]
+       [:reward [:p "Reward"]]]
+      (for [delegator (map-indexed vector (@state :delegators))]
+        [:row {:class (when (even? (first delegator)) "light-bg")}
+         [:number [:p (inc (first delegator))]]
+         [:addres [:a ((second delegator) :address)]]
+         [:amount [:p ((second delegator) :amount)]]
+         [:reward [:p ((second delegator) :reward)]]])]
+     [:stake-data
+      [:div.first
+       [:p "Total Staked"]
+       [:value (get-in @state [:stake :total]) [:span "ONE"]]]
+      [:div
+       [:p "Delegated"]
+       [:value (get-in @state [:stake :delegated] [:span "ONE"])]]
+      [:div.last
+       [:p "Self Stake"]
+       [:value (get-in @state [:stake :self] [:span "ONE"])]]]]]
 
-
-
-(defmethod event-msg-handler :chsk/handshake
-  [{:as ev-msg :keys [?data uid]}] 
-  (let [[?uid ?csrf-token ?handshake-data] ?data] 
-    (console! "Connected.")
-    ))
-
-
-(defmethod event-msg-handler :chsk/recv
-  [{:as ev-msg :keys [?data]}] 
-  (let [[event-key event-data] ?data]
-    (citrus/dispatch! reconciler :game :update {(keyword (name event-key)) event-data})
-    ))
-
-
-
+   [:footer
+    [:div
+     [:p "Don't forget to donate some ONE or ETH to the ZGEN DAO to support our further work:"]
+     [:a "0xAAA77711c7b70e20d32Ec50b21Df89e742607b9b"]]
+    [:div
+     [:p "Send your feature requests to:"]
+     [:a "crypto@zgen.hu"]]
+    [:div
+     [:p "Source:"]
+     [:a {:href "google.com"} "liszper/one-validator-dashboard"]]]])
