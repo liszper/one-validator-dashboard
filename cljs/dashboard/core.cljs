@@ -127,7 +127,7 @@
 
 ;//////////\\\\\\\\\ UI
 
-(rum/mount (Dashboard reconciler) (. js/document (getElementById "app")))
+(rum/mount (Dashboard reconciler chsk-send!) (. js/document (getElementById "app")))
 
 
 (defmulti event-msg-handler :id)

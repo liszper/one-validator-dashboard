@@ -20,7 +20,7 @@
    [:br]
    ])
 
-(rum/defc Dashboard < rum/reactive [r]
+(rum/defc Dashboard < rum/reactive [r chsk-send!]
   (let [
         {:keys [latest-headers latest-response addresses validator-info edit wallet-backup wallet-balances]} (rum/react (citrus/subscription r [:game]))
         {:keys [beacon-chain-header shard-chain-header]} latest-headers
@@ -94,14 +94,14 @@
        {:on-click
         #(do
           (chsk-send! [:validator/update edit])
-          (citrus/dispatch! reconciler :game :update {:edit {}})
+          (citrus/dispatch! r :game :update {:edit {}})
           )}
        "Update"]
       [:button.btn
        {:on-click
         #(do
           (chsk-send! [:validator/create edit])
-          (citrus/dispatch! reconciler :game :update {:edit {}})
+          (citrus/dispatch! r :game :update {:edit {}})
           )}
        "Create"])
       (when latest-response [:p "Latest response:"])
@@ -125,6 +125,8 @@
     [:password
      [:input {:placeholder "Password"}]
      [:login-btn [:img {:src "/images/arrow.svg"}]]]]])
+
+(def state (atom {}))
 
 (defn app []
   [:div
